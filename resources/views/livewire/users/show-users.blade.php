@@ -27,36 +27,11 @@
         </div>
     </div>
 
-    @if($showMessage)
-        <div 
-            x-data="{ show: true }"
-            x-show="show"
-            x-init="setTimeout(() => { show = false; $wire.hideMessage() }, 5000)"
-            x-transition:enter="transition ease-out duration-300"
-            x-transition:enter-start="opacity-0 transform scale-90"
-            x-transition:enter-end="opacity-100 transform scale-100"
-            x-transition:leave="transition ease-in duration-300"
-            x-transition:leave-start="opacity-100 transform scale-100"
-            x-transition:leave-end="opacity-0 transform scale-90"
-            class="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded relative"
-        >
-            <div class="flex items-center justify-between">
-                <div class="flex items-center">
-                    <svg class="w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-                    </svg>
-                    {{ $message }}
-                </div>
-                <button 
-                    @click="show = false; $wire.hideMessage()"
-                    class="text-green-700 hover:text-green-900 focus:outline-none"
-                >
-                    <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
-                    </svg>
-                </button>
-            </div>
-        </div>
+    @if (session()->has('message'))
+        <x-ui.flash-message 
+            :message="session('message')"
+            :type="session('message_type', 'success')"
+        />
     @endif
 
     <div class="bg-white shadow-sm rounded-lg overflow-hidden">
@@ -76,6 +51,10 @@
                         </button>
                     </div>
                 </div>
+                <a href="{{ route('users.create') }}" 
+                   class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    Nieuwe gebruiker
+                </a>
             </div>
         </div>
 
@@ -166,10 +145,10 @@
                         </button>
                     </th>
                     <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Acties</th>
-                </tr>
-            </thead>
+        </tr>
+        </thead>
             <tbody class="bg-white divide-y divide-gray-200">
-                @forelse($users as $user)
+        @forelse($users as $user)
                     <tr class="{{ $user->trashed() ? 'bg-red-50' : '' }}">
                         <td class="px-6 py-4 whitespace-nowrap">
                             <input type="checkbox" 
@@ -231,17 +210,17 @@
                                     </button>
                                 @endif
                             </div>
-                        </td>
-                    </tr>
-                @empty
-                    <tr>
+                </td>
+            </tr>
+        @empty
+            <tr>
                         <td colspan="4" class="px-6 py-4 text-center text-sm text-gray-500">
                             Geen gebruikers gevonden.
                         </td>
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
+            </tr>
+        @endforelse
+        </tbody>
+    </table>
     </div>
 
     <div class="mt-4">

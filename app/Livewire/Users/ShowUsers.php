@@ -41,25 +41,25 @@ class ShowUsers extends Component
         }
     }
 
-    public function delete($userId)
+    public function delete(User $user)
     {
-        $user = User::findOrFail($userId);
         $user->delete();
-        $this->showMessage('Gebruiker succesvol verwijderd.');
+        session()->flash('message', 'Gebruiker verwijderd.');
+        session()->flash('message_type', 'error');
     }
 
     public function forceDelete($userId)
     {
-        $user = User::withTrashed()->findOrFail($userId);
-        $user->forceDelete();
-        $this->showMessage('Gebruiker permanent verwijderd.');
+        User::withTrashed()->find($userId)->forceDelete();
+        session()->flash('message', 'Gebruiker permanent verwijderd.');
+        session()->flash('message_type', 'error');
     }
 
     public function restore($userId)
     {
-        $user = User::withTrashed()->findOrFail($userId);
-        $user->restore();
-        $this->showMessage('Gebruiker succesvol hersteld.');
+        User::withTrashed()->find($userId)->restore();
+        session()->flash('message', 'Gebruiker hersteld.');
+        session()->flash('message_type', 'success');
     }
 
     public function showMessage($message)
@@ -78,37 +78,30 @@ class ShowUsers extends Component
     {
         $count = count($this->selectedUsers);
         User::whereIn('id', $this->selectedUsers)->delete();
-        
         $this->selectedUsers = [];
         $this->selectAll = false;
-        
-        $this->showMessage($count . ' gebruikers zijn verwijderd.');
+        session()->flash('message', $count . ' gebruiker(s) verwijderd.');
+        session()->flash('message_type', 'error');
     }
 
     public function bulkRestore()
     {
         $count = count($this->selectedUsers);
-        User::withTrashed()
-            ->whereIn('id', $this->selectedUsers)
-            ->restore();
-        
+        User::whereIn('id', $this->selectedUsers)->restore();
         $this->selectedUsers = [];
         $this->selectAll = false;
-        
-        $this->showMessage($count . ' gebruikers zijn hersteld.');
+        session()->flash('message', $count . ' gebruiker(s) hersteld.');
+        session()->flash('message_type', 'success');
     }
 
     public function bulkForceDelete()
     {
         $count = count($this->selectedUsers);
-        User::withTrashed()
-            ->whereIn('id', $this->selectedUsers)
-            ->forceDelete();
-        
+        User::whereIn('id', $this->selectedUsers)->forceDelete();
         $this->selectedUsers = [];
         $this->selectAll = false;
-        
-        $this->showMessage($count . ' gebruikers zijn permanent verwijderd.');
+        session()->flash('message', $count . ' gebruiker(s) permanent verwijderd.');
+        session()->flash('message_type', 'error');
     }
 
     public function updatedSelectAll($value)

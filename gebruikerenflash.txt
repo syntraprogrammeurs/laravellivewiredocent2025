@@ -1,0 +1,268 @@
+# Flash Message Implementatie voor Gebruikersbeheer
+
+## Stap 1: Component Aanmaken
+1. Maak een nieuwe directory aan: `resources/views/components/ui/`
+2. Maak een nieuw bestand: `resources/views/components/ui/flash-message.blade.php`
+
+## Stap 2: Aanpassingen in Bestanden
+
+### 1. Flash Message Component
+Nieuw bestand: `resources/views/components/ui/flash-message.blade.php`
+```php
+@props(['message', 'type' => 'success'])
+
+@php
+// Definieer kleuren voor verschillende message types
+$colors = [
+    'success' => [
+        'bg' => 'bg-green-100',
+        'border' => 'border-green-400',
+        'text' => 'text-green-700',
+        'button' => 'text-green-700 hover:text-green-900',
+    ],
+    'error' => [
+        'bg' => 'bg-red-100',
+        'border' => 'border-red-400',
+        'text' => 'text-red-700',
+        'button' => 'text-red-700 hover:text-red-900',
+    ],
+    'warning' => [
+        'bg' => 'bg-yellow-100',
+        'border' => 'border-yellow-400',
+        'text' => 'text-yellow-700',
+        'button' => 'text-yellow-700 hover:text-yellow-900',
+    ],
+    'info' => [
+        'bg' => 'bg-blue-100',
+        'border' => 'border-blue-400',
+        'text' => 'text-blue-700',
+        'button' => 'text-blue-700 hover:text-blue-900',
+    ],
+];
+
+// Haal de juiste kleuren op voor het type message, fallback naar success als type niet bestaat
+$currentColors = $colors[$type] ?? $colors['success'];
+@endphp
+
+<div 
+    x-data="{ show: true }"
+    x-show="show"
+    x-init="setTimeout(() => { show = false }, 5000)"  {{-- Auto-hide na 5 seconden --}}
+    x-transition:enter="transition ease-out duration-300"
+    x-transition:enter-start="opacity-0 transform scale-90"
+    x-transition:enter-end="opacity-100 transform scale-100"
+    x-transition:leave="transition ease-in duration-300"
+    x-transition:leave-start="opacity-100 transform scale-100"
+    x-transition:leave-end="opacity-0 transform scale-90"
+    class="mb-4 p-4 {{ $currentColors['bg'] }} border {{ $currentColors['border'] }} {{ $currentColors['text'] }} rounded relative"
+>
+    <div class="flex items-center justify-between">
+        <div class="flex items-center">
+            {{-- Verschillende iconen voor verschillende message types --}}
+            @if($type === 'success')
+                <svg class="w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                </svg>
+            @elseif($type === 'error')
+                <svg class="w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                </svg>
+            @endif
+            {{ $message }}
+        </div>
+        <button 
+            @click="show = false"
+            class="{{ $currentColors['button'] }} focus:outline-none"
+        >
+            <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+            </svg>
+        </button>
+    </div>
+</div>
+```
+
+### 2. CreateUser Component Aanpassingen
+Bestand: `app/Livewire/Users/CreateUser.php`
+Wijzigingen:
+- Verwijderd: Oude flash message code
+- Toegevoegd: Nieuwe flash message implementatie met type
+```php
+// Oud
+session()->flash('message', 'Gebruiker succesvol aangemaakt.');
+
+// Nieuw
+session()->flash('message', 'Gebruiker succesvol aangemaakt.');
+session()->flash('message_type', 'success');
+```
+
+### 3. ShowUsers Component Aanpassingen
+Bestand: `app/Livewire/Users/ShowUsers.php`
+Wijzigingen:
+- Verwijderd: `$showMessage` en `$message` properties
+- Verwijderd: `showMessage()` en `hideMessage()` methods
+- Aangepast: Alle actie methods om session flash te gebruiken
+
+Voorbeelden van wijzigingen:
+```php
+// Oud
+public function delete($userId)
+{
+    $user = User::findOrFail($userId);
+    $user->delete();
+    $this->showMessage('Gebruiker succesvol verwijderd.');
+}
+
+// Nieuw
+public function delete(User $user)
+{
+    $user->delete();
+    session()->flash('message', 'Gebruiker verwijderd.');
+    session()->flash('message_type', 'error');
+}
+```
+
+### 4. View Aanpassingen
+
+#### Create User View
+Bestand: `resources/views/livewire/users/create-user.blade.php`
+Wijzigingen:
+```php
+// Oud
+@if($showMessage)
+    <div class="alert alert-success">{{ $message }}</div>
+@endif
+
+// Nieuw
+@if (session()->has('message'))
+    <x-ui.flash-message 
+        :message="session('message')"
+        :type="session('message_type', 'success')"
+    />
+@endif
+```
+
+#### Show Users View
+Bestand: `resources/views/livewire/users/show-users.blade.php`
+Wijzigingen:
+```php
+// Oud
+@if($showMessage)
+    <div 
+        x-data="{ show: true }"
+        x-show="show"
+        x-init="setTimeout(() => { show = false; $wire.hideMessage() }, 5000)"
+        class="alert alert-success"
+    >
+        {{ $message }}
+    </div>
+@endif
+
+// Nieuw
+@if (session()->has('message'))
+    <x-ui.flash-message 
+        :message="session('message')"
+        :type="session('message_type', 'success')"
+    />
+@endif
+```
+
+## Stap 3: Kleuren en Types Configuratie
+In het flash-message component hebben we de volgende kleurenconfiguraties toegevoegd:
+
+```php
+$colors = [
+    'success' => [
+        'bg' => 'bg-green-100',
+        'border' => 'border-green-400',
+        'text' => 'text-green-700',
+        'button' => 'text-green-700 hover:text-green-900',
+    ],
+    'error' => [
+        'bg' => 'bg-red-100',
+        'border' => 'border-red-400',
+        'text' => 'text-red-700',
+        'button' => 'text-red-700 hover:text-red-900',
+    ],
+    // ... andere kleuren configuraties ...
+];
+```
+
+## Stap 4: Message Types Implementatie
+We hebben de volgende message types geïmplementeerd met bijbehorende gebruik:
+
+1. Success Messages (groen):
+```php
+session()->flash('message', 'Gebruiker succesvol aangemaakt.');
+session()->flash('message_type', 'success');
+```
+
+2. Error Messages (rood):
+```php
+session()->flash('message', 'Gebruiker verwijderd.');
+session()->flash('message_type', 'error');
+```
+
+3. Warning Messages (geel):
+```php
+session()->flash('message', 'Let op: Deze actie kan niet ongedaan gemaakt worden.');
+session()->flash('message_type', 'warning');
+```
+
+4. Info Messages (blauw):
+```php
+session()->flash('message', 'Tip: U kunt gebruikers ook bulksgewijs beheren.');
+session()->flash('message_type', 'info');
+```
+
+## Stap 5: Gebruikte Acties en Hun Message Types
+
+1. Gebruiker Aanmaken:
+- Type: success
+- Bericht: "Gebruiker succesvol aangemaakt."
+
+2. Gebruiker Verwijderen:
+- Type: error
+- Bericht: "Gebruiker verwijderd."
+
+3. Gebruiker Herstellen:
+- Type: success
+- Bericht: "Gebruiker hersteld."
+
+4. Gebruiker Permanent Verwijderen:
+- Type: error
+- Bericht: "Gebruiker permanent verwijderd."
+
+5. Bulk Acties:
+- Verwijderen: error - "{count} gebruiker(s) verwijderd."
+- Herstellen: success - "{count} gebruiker(s) hersteld."
+- Permanent verwijderen: error - "{count} gebruiker(s) permanent verwijderd."
+
+## Gebruik van Flash Messages
+
+1. **Types Messages:**
+   - success (groen): Voor positieve acties (aanmaken, herstellen)
+   - error (rood): Voor negatieve acties (verwijderen)
+   - warning (geel): Voor waarschuwingen
+   - info (blauw): Voor informatieve berichten
+
+2. **Kenmerken:**
+   - Auto-hide na 5 seconden
+   - Sluitknop voor handmatig verwijderen
+   - Fade/scale animaties bij verschijnen/verdwijnen
+   - Contextafhankelijke kleuren
+   - Passende iconen per type
+
+3. **Implementatie in Views:**
+```php
+<x-ui.flash-message 
+    :message="session('message')"
+    :type="session('message_type', 'success')"
+/>
+```
+
+4. **Flash Message Aanmaken:**
+```php
+session()->flash('message', 'Je bericht hier');
+session()->flash('message_type', 'success'); // of 'error', 'warning', 'info'
+``` 

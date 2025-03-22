@@ -1,6 +1,7 @@
 <?php
 
 use App\Livewire\Users\ShowUsers;
+use App\Livewire\Users\CreateUser;
 use Illuminate\Support\Facades\Route;
 use Livewire\Volt\Volt;
 
@@ -18,9 +19,7 @@ Route::middleware(['auth'])->group(function () {
     Volt::route('settings/password', 'settings.password')->name('settings.password');
     Volt::route('settings/appearance', 'settings.appearance')->name('settings.appearance');
     Route::get('/users', ShowUsers::class)->name('users.index');
+    Route::get('/users/create', CreateUser::class)->name('users.create');
 });
-
-
-
 
 require __DIR__.'/auth.php';
