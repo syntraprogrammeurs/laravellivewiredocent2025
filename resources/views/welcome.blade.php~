@@ -50,9 +50,6 @@
 <x-ui.card title="Event: Livewire stuurt DOM-event naar JavaScript">
     <livewire:dom-event-example />
 </x-ui.card>
-<x-ui.forms.group label="E-mail" for="email" error="email">
-    <x-ui.forms.input type="email" name="email" id="email" wire:model.live="email" />
-</x-ui.forms.group>
 
 </body>
 </html>
