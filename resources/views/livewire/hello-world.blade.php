@@ -12,6 +12,9 @@
             class="cursor-pointer px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition duration-200">
         Refresh
     </button>
+    <div wire:poll.5000ms>
+        De tijd is: {{ now()->format('H:i:s') }}
+    </div>
 </div>
 
 

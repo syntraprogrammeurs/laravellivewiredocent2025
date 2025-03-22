@@ -19,6 +19,13 @@
     <livewire:counter />
     <livewire:clock />
     <livewire:name-form />
+    <livewire:parent-component />
+    <livewire:search-input />
+    <livewire:search-results />
+    <livewire:dom-event-example />
+
+
+
 
 
 </body>
