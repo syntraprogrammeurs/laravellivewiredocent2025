@@ -1,0 +1,151 @@
+# Export Functionaliteit Implementatie
+
+## Overzicht
+Deze implementatie voegt export functionaliteit toe aan het gebruikersbeheer systeem. Gebruikers kunnen nu de gebruikerslijst exporteren naar CSV en Excel formaten.
+
+## Benodigde Package
+- Laravel Excel (maatwebsite/excel) voor CSV en Excel export
+
+## Component Wijzigingen (app/Livewire/Users/ShowUsers.php)
+
+```php
+// Nieuwe imports toevoegen
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\UsersExport;
+
+// Nieuwe export methodes toevoegen
+public function exportCsv()
+{
+    return Excel::download(new UsersExport($this->getExportQuery()), 'users.csv');
+}
+
+public function exportExcel()
+{
+    return Excel::download(new UsersExport($this->getExportQuery()), 'users.xlsx');
+}
+
+// Helper methode voor export query
+private function getExportQuery()
+{
+    return User::query()
+        ->when($this->search, function ($query) {
+            $query->where(function ($query) {
+                $query->where('name', 'like', '%' . $this->search . '%')
+                    ->orWhere('email', 'like', '%' . $this->search . '%');
+            });
+        })
+        ->when($this->showDeleted, function ($query) {
+            $query->withTrashed();
+        })
+        ->orderBy($this->sortField, $this->sortDirection);
+}
+```
+
+## UsersExport Class (app/Exports/UsersExport.php)
+Deze class handelt de Excel/CSV export af:
+
+```php
+<?php
+
+namespace App\Exports;
+
+use Maatwebsite\Excel\Concerns\FromQuery;
+use Maatwebsite\Excel\Concerns\WithHeadings;
+use Maatwebsite\Excel\Concerns\WithMapping;
+use Illuminate\Database\Eloquent\Builder;
+
+class UsersExport implements FromQuery, WithHeadings, WithMapping
+{
+    protected $query;
+
+    public function __construct(Builder $query)
+    {
+        $this->query = $query;
+    }
+
+    public function query()
+    {
+        return $this->query;
+    }
+
+    public function headings(): array
+    {
+        return [
+            'ID',
+            'Naam',
+            'E-mailadres',
+            'Geregistreerd op',
+            'Status',
+        ];
+    }
+
+    public function map($user): array
+    {
+        return [
+            $user->id,
+            $user->name,
+            $user->email,
+            $user->created_at->format('d-m-Y H:i:s'),
+            $user->trashed() ? 'Verwijderd' : 'Actief',
+        ];
+    }
+}
+```
+
+## View Wijzigingen (resources/views/livewire/users/show-users.blade.php)
+Export knoppen toevoegen aan de view:
+
+```php
+<!-- Export knoppen -->
+<div class="bg-gray-50 px-4 py-3 border-b border-gray-200">
+    <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-4">
+            <span class="text-sm text-gray-700">Exporteer gebruikers:</span>
+            <div class="flex space-x-2">
+                <button wire:click="exportCsv" 
+                        class="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    CSV
+                </button>
+                <button wire:click="exportExcel" 
+                        class="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    Excel
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+```
+
+## Functionaliteit
+1. Export naar verschillende formaten:
+   - CSV: Eenvoudig tekstbestand met komma's als scheidingsteken
+   - Excel: XLSX bestand met opmaak
+
+2. Export bevat de volgende velden:
+   - ID
+   - Naam
+   - E-mailadres
+   - Registratie datum
+   - Status (Actief/Verwijderd)
+
+3. Export respecteert:
+   - Zoekfilters
+   - Verwijderde gebruikers filter
+   - Sortering
+
+## UI/UX
+- Duidelijke export knoppen bovenaan de tabel
+- Consistente styling met de rest van de applicatie
+- Directe download van bestanden
+- Duidelijke bestandsnamen
+
+## Verwijderde Functionaliteit
+De volgende export opties zijn verwijderd vanwege problemen met UTF-8 encoding:
+- PDF export
+- JSON export
+
+## Toekomstige Verbeteringen
+- Export van geselecteerde gebruikers alleen
+- Meer export opties (bijvoorbeeld: alleen actieve gebruikers)
+- Aanpasbare kolommen voor export
+- Voortgangsindicator voor grote exports 
