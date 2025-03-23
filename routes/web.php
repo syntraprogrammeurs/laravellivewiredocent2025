@@ -14,7 +14,7 @@ Route::view('dashboard', 'dashboard')
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth', 'verified'])->group(function () {
     Route::redirect('settings', 'settings/profile');
     Volt::route('settings/profile', 'settings.profile')->name('settings.profile');
     Volt::route('settings/password', 'settings.password')->name('settings.password');
@@ -22,6 +22,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/users', ShowUsers::class)->name('users.index');
     Route::get('/users/create', CreateUser::class)->name('users.create');
     Route::get('/users/{user}/edit', EditUser::class)->name('users.edit');
+    Route::get('/roles', \App\Livewire\Roles\ShowRoles::class)->name('roles.index');
+    Route::get('/roles/create', \App\Livewire\Roles\CreateRole::class)->name('roles.create');
 });
 
 require __DIR__.'/auth.php';

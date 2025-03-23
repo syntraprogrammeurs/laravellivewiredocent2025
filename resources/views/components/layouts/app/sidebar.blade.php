@@ -25,6 +25,14 @@
                 {{ __('Gebruikers') }}
             </flux:navlist.item>
 
+            <flux:navlist.item
+                icon="shield-check"
+                :href="route('roles.index')"
+                :current="request()->routeIs('roles.index')"
+                wire:navigate
+            >
+                {{ __('Rollen') }}
+            </flux:navlist.item>
 
             <flux:spacer />
 

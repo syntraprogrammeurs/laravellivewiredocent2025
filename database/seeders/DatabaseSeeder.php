@@ -13,14 +13,11 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Eerst de rollen aanmaken
-        $this->call(RoleSeeder::class);
-        
-        // Dan de permissions aanmaken en toekennen
-        $this->call(PermissionSeeder::class);
-        
-        // Dan de admin gebruiker via de UserSeeder
-        $this->call(UserSeeder::class);
+        $this->call([
+            RoleSeeder::class,
+            PermissionSeeder::class,
+            UserSeeder::class,
+        ]);
 
         // Maak 50 test gebruikers
         User::factory(50)->create();

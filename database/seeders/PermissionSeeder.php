@@ -20,6 +20,11 @@ class PermissionSeeder extends Seeder
             'force delete users',
             'assign roles',
             'remove roles',
+            // Role management permissions
+            'view roles',
+            'create roles',
+            'edit roles',
+            'delete roles',
         ];
 
         // Create permissions

@@ -9,8 +9,31 @@ class RoleSeeder extends Seeder
 {
     public function run(): void
     {
-        Role::firstOrCreate(['name' => 'admin']);
-        Role::firstOrCreate(['name' => 'editor']);
-        Role::firstOrCreate(['name' => 'viewer']);
+        // Verwijder bestaande rollen
+        Role::query()->delete();
+
+        Role::create([
+            'name' => 'admin',
+            'guard_name' => 'web',
+            'icon' => 'shield-check'
+        ]);
+
+        Role::create([
+            'name' => 'editor',
+            'guard_name' => 'web',
+            'icon' => 'pencil'
+        ]);
+
+        Role::create([
+            'name' => 'viewer',
+            'guard_name' => 'web',
+            'icon' => 'eye'
+        ]);
+
+        Role::create([
+            'name' => 'author',
+            'guard_name' => 'web',
+            'icon' => 'document'
+        ]);
     }
 } 
