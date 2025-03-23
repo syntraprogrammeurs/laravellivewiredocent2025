@@ -9,11 +9,11 @@
                 <span class="ml-2 text-sm text-gray-700">Toon verwijderde gebruikers</span>
             </label>
         </div>
-        
+
         <div class="flex items-center space-x-4">
             <div class="relative">
-                <input 
-                    type="text" 
+                <input
+                    type="text"
                     wire:model.live.debounce.300ms="search"
                     placeholder="Zoek gebruikers..."
                     class="pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -28,7 +28,7 @@
     </div>
 
     @if (session()->has('message'))
-        <x-ui.flash-message 
+        <x-ui.flash-message
             :message="session('message')"
             :type="session('message_type', 'success')"
         />
@@ -41,17 +41,17 @@
                 <div class="flex items-center space-x-4">
                     <span class="text-sm text-gray-700">Exporteer gebruikers:</span>
                     <div class="flex space-x-2">
-                        <button wire:click="exportCsv" 
+                        <button wire:click="exportCsv"
                                 class="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                             CSV
                         </button>
-                        <button wire:click="exportExcel" 
+                        <button wire:click="exportExcel"
                                 class="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                             Excel
                         </button>
                     </div>
                 </div>
-                <a href="{{ route('users.create') }}" 
+                <a href="{{ route('users.create') }}"
                    class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                     Nieuwe gebruiker
                 </a>
@@ -145,82 +145,116 @@
                         </button>
                     </th>
                     <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Acties</th>
-        </tr>
-        </thead>
+                </tr>
+            </thead>
             <tbody class="bg-white divide-y divide-gray-200">
-        @forelse($users as $user)
+                @forelse($users as $user)
                     <tr class="{{ $user->trashed() ? 'bg-red-50' : '' }}">
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <input type="checkbox" 
-                                   wire:model.live="selectedUsers" 
+                            <input type="checkbox"
+                                   wire:model.live="selectedUsers"
                                    value="{{ $user->id }}"
                                    class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm font-medium text-gray-900">{{ $user->name }}</div>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            @if($editingUserId === $user->id)
+                                <input type="text" wire:model="editingName" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">
+                                @error('editingName') <span class="mt-1 text-sm text-red-600">{{ $message }}</span> @enderror
+                            @else
+                                {{ $user->name }}
+                            @endif
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900">{{ $user->email }}</div>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            @if($editingUserId === $user->id)
+                                <input type="email" wire:model="editingEmail" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">
+                                @error('editingEmail') <span class="mt-1 text-sm text-red-600">{{ $message }}</span> @enderror
+                            @else
+                                {{ $user->email }}
+                            @endif
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900">{{ $user->created_at->format('d-m-Y H:i') }}</div>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {{ $user->created_at->format('d-m-Y H:i:s') }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <div class="flex items-center justify-end space-x-3">
-                                @if($user->trashed())
-                                    <button 
-                                        wire:click="restore({{ $user->id }})"
-                                        wire:confirm="Weet je zeker dat je deze gebruiker wilt herstellen?"
-                                        class="text-green-600 hover:text-green-900 group relative"
-                                        title="Herstellen"
-                                    >
-                                        <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                            <path fill-rule="evenodd" d="M5 2a1 1 0 011-1h8a1 1 0 011 1v2h3a1 1 0 011 1v2a1 1 0 01-1 1h-1v6a1 1 0 01-1 1H6a1 1 0 01-1-1v-6H4a1 1 0 01-1-1V5a1 1 0 011-1h3V2zm2 5a1 1 0 100 2h8a1 1 0 100-2H7z" clip-rule="evenodd" />
+                            <div class="flex items-center justify-end space-x-2">
+                                @if($editingUserId === $user->id)
+                                    <!-- Inline editing knoppen -->
+                                    <button wire:click="updateInline" class="text-green-600 hover:text-green-900">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                                         </svg>
-                                        <span class="absolute -top-8 left-1/2 transform -translate-x-1/2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
-                                            Herstellen
-                                        </span>
                                     </button>
-                                    <button 
-                                        wire:click="forceDelete({{ $user->id }})"
-                                        wire:confirm="Weet je zeker dat je deze gebruiker permanent wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt."
-                                        class="text-red-600 hover:text-red-900 group relative"
-                                        title="Permanent verwijderen"
-                                    >
-                                        <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                            <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+                                    <button wire:click="cancelEditing" class="text-gray-600 hover:text-gray-900">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                                         </svg>
-                                        <span class="absolute -top-8 left-1/2 transform -translate-x-1/2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
-                                            Permanent verwijderen
-                                        </span>
+                                    </button>
+                                @elseif($user->deleted_at)
+                                    <!-- Herstel knop voor verwijderde gebruikers -->
+                                    <button wire:click="restoreUser({{ $user->id }})" class="text-green-600 hover:text-green-900">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                        </svg>
                                     </button>
                                 @else
-                                    <button 
-                                        wire:click="delete({{ $user->id }})"
-                                        wire:confirm="Weet je zeker dat je deze gebruiker wilt verwijderen?"
-                                        class="text-red-600 hover:text-red-900 group relative"
-                                        title="Verwijderen"
-                                    >
-                                        <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                            <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
-                                        </svg>
-                                        <span class="absolute -top-8 left-1/2 transform -translate-x-1/2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
-                                            Verwijderen
-                                        </span>
-                                    </button>
+                                    <!-- Dropdown menu voor edit opties -->
+                                    <div class="relative" x-data="{ open: false }">
+                                        <button @click="open = !open" class="text-blue-600 hover:text-blue-900 focus:outline-none">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                                            </svg>
+                                        </button>
+                                        
+                                        <div x-show="open" 
+                                             @click.away="open = false"
+                                             class="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
+                                            <div class="py-1" role="menu">
+                                                <!-- Inline edit optie -->
+                                                <button wire:click="startEditing({{ $user->id }})" 
+                                                        class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
+                                                        role="menuitem">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                    </svg>
+                                                    <span>Snel bewerken</span>
+                                                </button>
+                                                
+                                                <!-- Volledige edit optie -->
+                                                <a href="{{ route('users.edit', $user) }}" 
+                                                   class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
+                                                   role="menuitem">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                    </svg>
+                                                    <span>Volledig bewerken</span>
+                                                </a>
+                                                
+                                                <!-- Verwijder optie -->
+                                                <button wire:click="deleteUser({{ $user->id }})" 
+                                                        class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 flex items-center space-x-2"
+                                                        role="menuitem">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                    </svg>
+                                                    <span>Verwijderen</span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
                                 @endif
                             </div>
-                </td>
-            </tr>
-        @empty
-            <tr>
-                        <td colspan="4" class="px-6 py-4 text-center text-sm text-gray-500">
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="5" class="px-6 py-4 text-center text-sm text-gray-500">
                             Geen gebruikers gevonden.
                         </td>
-            </tr>
-        @endforelse
-        </tbody>
-    </table>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
     </div>
 
     <div class="mt-4">

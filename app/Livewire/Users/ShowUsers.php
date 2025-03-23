@@ -10,6 +10,8 @@ use Livewire\Attributes\Title;
 use Livewire\WithPagination;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\UsersExport;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 
 #[Title('Gebruikersbeheer')]
 class ShowUsers extends Component
@@ -25,6 +27,11 @@ class ShowUsers extends Component
     public $sortDirection = 'desc';
     public $selectedUsers = [];
     public $selectAll = false;
+    public $editingUserId = null;
+    public $editingName = '';
+    public $editingEmail = '';
+    public $editingPassword = '';
+    public $editingPasswordConfirmation = '';
 
     public function updatingSearch()
     {
@@ -192,6 +199,68 @@ class ShowUsers extends Component
                 ->orderBy($this->sortField, $this->sortDirection)
                 ->paginate($this->perPage),
         ]);
+    }
+
+    /**
+     * Start inline editing voor een gebruiker
+     */
+    public function startEditing($userId)
+    {
+        $user = User::find($userId);
+        $this->editingUserId = $userId;
+        $this->editingName = $user->name;
+        $this->editingEmail = $user->email;
+        $this->editingPassword = '';
+        $this->editingPasswordConfirmation = '';
+    }
+
+    /**
+     * Stop inline editing
+     */
+    public function cancelEditing()
+    {
+        $this->resetEditing();
+    }
+
+    /**
+     * Reset alle editing properties
+     */
+    private function resetEditing()
+    {
+        $this->editingUserId = null;
+        $this->editingName = '';
+        $this->editingEmail = '';
+        $this->editingPassword = '';
+        $this->editingPasswordConfirmation = '';
+    }
+
+    /**
+     * Update een gebruiker via inline editing
+     */
+    public function updateInline()
+    {
+        $this->validate([
+            'editingName' => 'required|string|max:255',
+            'editingEmail' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($this->editingUserId)],
+            'editingPassword' => 'nullable|string|min:8|confirmed',
+        ]);
+
+        $user = User::find($this->editingUserId);
+        $user->update([
+            'name' => $this->editingName,
+            'email' => $this->editingEmail,
+        ]);
+
+        if ($this->editingPassword) {
+            $user->update([
+                'password' => Hash::make($this->editingPassword)
+            ]);
+        }
+
+        session()->flash('message', 'Gebruiker succesvol bijgewerkt.');
+        session()->flash('message_type', 'success');
+
+        $this->resetEditing();
     }
 }
 

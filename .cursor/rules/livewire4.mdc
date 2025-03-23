@@ -1,0 +1,45 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+#Regels for livewire 4
+
+$this->emit(...)
+➤ Vervangen door dispatch('eventnaam')
+
+$this->emitTo(Component::class, 'event', ...)
+➤ Vervangen door dispatch('eventnaam') + #[On('eventnaam')] in target component
+
+$this->emitSelf('eventnaam')
+➤ Vervangen door dispatch('eventnaam')
+(event handler in dezelfde component via #[On('eventnaam')])
+
+$this->emitUp(...)
+➤ Niet meer nodig. Gebruik dispatch() met #[On(...)] in parent component
+
+Livewire.emit(...) in JavaScript
+➤ Vervangen door Livewire.dispatch('eventnaam', {...})
+
+Livewire.on(...) in JavaScript
+➤ Vervangen door Alpine.js listeners zoals @click="$dispatch('eventnaam')"
+
+@this.emit(...), @this.set(...) (Blade directives)
+➤ Niet meer ondersteund. Gebruik component-bound logic of Alpine.js
+
+dispatchBrowserEvent(...)
+➤ Vervangen door dispatch('eventnaam') (uniform voor alle events)
+
+init() lifecycle hook
+➤ Verwijderd. Gebruik standaard mount() of render()
+➤ JavaScript-initialisatie → verplaatsen naar Alpine.js
+
+wire:loading.delay
+➤ Vervangen door alleen wire:loading
+(gebruik Tailwind animaties of Alpine transitions voor delays)
+
+refresh events via emit('refresh')
+➤ Vervangen door $this->reset(), dispatch('refresh') of component methods
+
+wire:poll (passieve polling)
+➤ Sterk afgeraden. Gebruik Laravel Echo of custom polling via setInterval + dispatch

@@ -1,0 +1,66 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+#Laravel 12
+Wat is verwijderd of vervangen in Laravel 12
+public function boot() in Service Providers
+➤ Niet langer aanbevolen voor route registraties.
+➤ Gebruik Route::middleware()->group() in routes/web.php of een Route Service Provider met map().
+
+app/Http/Controllers/Controller::middleware() aanroepen in constructor
+➤ Niet meer nodig.
+➤ Gebruik protected static $middleware = [...] in de controller zelf (of definieer middleware in routes).
+
+assertViewHas() in tests zonder expliciete data
+➤ Gedeprecieerd.
+➤ Gebruik assertViewHas('key', 'value') of check de data rechtstreeks met $response->viewData().
+
+route:list zonder --columns toont alles
+➤ Nieuw gedrag.
+➤ Gebruik php artisan route:list --columns=method,name,uri,action om output te beperken.
+
+vendor:publish --tag=laravel-mail
+➤ Niet meer nodig voor veel packages.
+➤ Laravel 12 gebruikt package auto-discovery en config kan inline worden overschreven in config/mail.php.
+
+protected $casts = [...] in models
+➤ Aanbevolen alternatief:
+➤ Gebruik protected function casts(): array (sinds Laravel 10, maar nu standaardvorm in Laravel 12).
+
+assertDatabaseHas() zonder expliciete verbinding
+➤ Kan verwarring geven bij meerdere DB’s.
+➤ Gebruik assertDatabaseHas('table', [...], 'connection_name') als je meerdere databases gebruikt.
+
+Str::of(...)->title() op null
+➤ Veranderd gedrag.
+➤ Laravel 12 gooit nu een exception bij null, dus zorg voor null-safe chaining of een fallback.
+
+Blade @error buiten @if($errors->any())
+➤ Niet fout, maar best practice is veranderd.
+➤ Gebruik @if($errors->has('field')) voor betere controle over foutmeldingen.
+
+Nieuw in Laravel 12 (vervangers of aanbevolen)
+readonly Eloquent properties via readonly() methode
+➤ Voor immutable modellen of attribuutgroepen
+
+Laravel Prompts 2.0 voor artisan interactie
+➤ Gebruik prompt()->select(...) in plaats van ouderwetse ask() of choice() functies
+
+Nieuwe Eloquent Scopes syntax:
+
+User::query()->active()->verified();
+➤ Gebruik scopeActive() methodes met fluent chaining zonder expliciet scope aan te roepen.
+
+Eager loading via ->loadMissing() standaard in policies
+➤ Verbeterde performance door automatische relation resolving
+
+Blade conditionals met meerdere condities in één directive:
+
+@if($user?->isAdmin && $user?->active)
+Route groups met ->namePrefix() en ->middleware() chaining syntax:
+
+Route::middleware('auth')->namePrefix('admin.')->group(...);
+Pest test runner standaard beschikbaar in laravel new
+➤ Gebruik pest voor expressive test writing
