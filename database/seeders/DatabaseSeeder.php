@@ -13,8 +13,14 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Maak een admin gebruiker
-        User::factory()->admin()->create();
+        // Eerst de rollen aanmaken
+        $this->call(RoleSeeder::class);
+        
+        // Dan de permissions aanmaken en toekennen
+        $this->call(PermissionSeeder::class);
+        
+        // Dan de admin gebruiker via de UserSeeder
+        $this->call(UserSeeder::class);
 
         // Maak 50 test gebruikers
         User::factory(50)->create();

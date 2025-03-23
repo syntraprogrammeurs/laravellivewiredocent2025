@@ -5,6 +5,7 @@ namespace Database\Factories;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Spatie\Permission\Models\Role;
 
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\User>
@@ -33,6 +34,17 @@ class UserFactory extends Factory
     }
 
     /**
+     * Configure the model factory to assign the viewer role by default.
+     */
+    public function configure()
+    {
+        return $this->afterCreating(function ($user) {
+            $role = Role::firstOrCreate(['name' => 'viewer']);
+            $user->assignRole($role);
+        });
+    }
+
+    /**
      * Indicate that the model's email address should be unverified.
      */
     public function unverified(): static
@@ -44,12 +56,14 @@ class UserFactory extends Factory
 
     public function admin(): static
     {
-        return $this->state(fn (array $attributes) => [
-            'name' => 'Admin User',
+        return $this->afterCreating(function ($user) {
+            $role = Role::firstOrCreate(['name' => 'admin']);
+            $user->assignRole($role);
+        })->state(fn () => [
+            'name' => 'Admin Gebruiker',
             'email' => 'admin@example.com',
             'email_verified_at' => now(),
             'password' => Hash::make('password'),
-            'remember_token' => Str::random(10),
         ]);
     }
 }

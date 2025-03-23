@@ -58,6 +58,19 @@
                                 <input type="password" wire:model="password_confirmation" id="password_confirmation" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md" placeholder="Laat leeg om niet te wijzigen">
                             </div>
                         </div>
+
+                        <!-- Rol -->
+                        <div>
+                            <label for="role" class="block text-sm font-medium text-gray-700">Rol</label>
+                            <div class="mt-1">
+                                <select wire:model="role" id="role" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">
+                                    @foreach($roles as $role)
+                                        <option value="{{ $role->name }}">{{ ucfirst($role->name) }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            @error('role') <span class="mt-1 text-sm text-red-600">{{ $message }}</span> @enderror
+                        </div>
                     </div>
 
                     <div class="flex justify-end space-x-3">

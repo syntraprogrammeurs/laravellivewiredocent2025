@@ -51,10 +51,12 @@
                         </button>
                     </div>
                 </div>
-                <a href="{{ route('users.create') }}"
-                   class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                    Nieuwe gebruiker
-                </a>
+                @if($can['create'])
+                    <a href="{{ route('users.create') }}"
+                       class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        Nieuwe gebruiker
+                    </a>
+                @endif
             </div>
         </div>
 
@@ -67,16 +69,20 @@
                             {{ count($selectedUsers) }} gebruikers geselecteerd
                         </span>
                         <div class="flex space-x-2">
-                            <button wire:click="bulkDelete" wire:confirm="Weet je zeker dat je de geselecteerde gebruikers wilt verwijderen?" class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
-                                Verwijderen
-                            </button>
-                            @if($showDeleted)
+                            @if($can['delete'])
+                                <button wire:click="bulkDelete" wire:confirm="Weet je zeker dat je de geselecteerde gebruikers wilt verwijderen?" class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                                    Verwijderen
+                                </button>
+                            @endif
+                            @if($showDeleted && $can['restore'])
                                 <button wire:click="bulkRestore" wire:confirm="Weet je zeker dat je de geselecteerde gebruikers wilt herstellen?" class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
                                     Herstellen
                                 </button>
-                                <button wire:click="bulkForceDelete" wire:confirm="Weet je zeker dat je de geselecteerde gebruikers permanent wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt." class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-white bg-red-800 hover:bg-red-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-800">
-                                    Permanent verwijderen
-                                </button>
+                                @if($can['forceDelete'])
+                                    <button wire:click="bulkForceDelete" wire:confirm="Weet je zeker dat je de geselecteerde gebruikers permanent wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt." class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-white bg-red-800 hover:bg-red-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-800">
+                                        Permanent verwijderen
+                                    </button>
+                                @endif
                             @endif
                         </div>
                     </div>
@@ -144,6 +150,7 @@
                             @endif
                         </button>
                     </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rollen</th>
                     <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Acties</th>
                 </tr>
             </thead>
@@ -175,6 +182,22 @@
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             {{ $user->created_at->format('d-m-Y H:i:s') }}
                         </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            <div class="flex flex-wrap gap-1">
+                                @foreach($user->roles as $role)
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                        @if($role->name === 'admin')
+                                            bg-purple-100 text-purple-800
+                                        @elseif($role->name === 'editor')
+                                            bg-blue-100 text-blue-800
+                                        @else
+                                            bg-gray-100 text-gray-800
+                                        @endif">
+                                        {{ ucfirst($role->name) }}
+                                    </span>
+                                @endforeach
+                            </div>
+                        </td>
                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                             <div class="flex items-center justify-end space-x-2">
                                 @if($editingUserId === $user->id)
@@ -191,11 +214,13 @@
                                     </button>
                                 @elseif($user->deleted_at)
                                     <!-- Herstel knop voor verwijderde gebruikers -->
-                                    <button wire:click="restoreUser({{ $user->id }})" class="text-green-600 hover:text-green-900">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                                        </svg>
-                                    </button>
+                                    @if($can['restore'])
+                                        <button wire:click="restoreUser({{ $user->id }})" class="text-green-600 hover:text-green-900">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                            </svg>
+                                        </button>
+                                    @endif
                                 @else
                                     <!-- Dropdown menu voor edit opties -->
                                     <div class="relative" x-data="{ open: false }">
@@ -209,36 +234,41 @@
                                              @click.away="open = false"
                                              class="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
                                             <div class="py-1" role="menu">
-                                                <!-- Inline edit optie -->
-                                                <button wire:click="startEditing({{ $user->id }})" 
-                                                        class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
-                                                        role="menuitem">
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                                    </svg>
-                                                    <span>Snel bewerken</span>
-                                                </button>
+                                                @if($can['edit'])
+                                                    <!-- Inline edit optie -->
+                                                    <button wire:click="startEditing({{ $user->id }})" 
+                                                            class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
+                                                            role="menuitem">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                        </svg>
+                                                        <span>Snel bewerken</span>
+                                                    </button>
+                                                    
+                                                    <!-- Volledige edit optie -->
+                                                    <a href="{{ route('users.edit', $user) }}" 
+                                                       class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
+                                                       role="menuitem">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                        </svg>
+                                                        <span>Volledig bewerken</span>
+                                                    </a>
+                                                @endif
                                                 
-                                                <!-- Volledige edit optie -->
-                                                <a href="{{ route('users.edit', $user) }}" 
-                                                   class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
-                                                   role="menuitem">
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                    </svg>
-                                                    <span>Volledig bewerken</span>
-                                                </a>
-                                                
-                                                <!-- Verwijder optie -->
-                                                <button wire:click="deleteUser({{ $user->id }})" 
-                                                        class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 flex items-center space-x-2"
-                                                        role="menuitem">
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                    </svg>
-                                                    <span>Verwijderen</span>
-                                                </button>
+                                                @if($can['delete'])
+                                                    <!-- Verwijder optie -->
+                                                    <button wire:click="delete({{ $user->id }})" 
+                                                            wire:confirm="Weet je zeker dat je deze gebruiker wilt verwijderen?"
+                                                            class="w-full text-left px-4 py-2 text-sm text-red-700 hover:bg-gray-100 flex items-center space-x-2"
+                                                            role="menuitem">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                        </svg>
+                                                        <span>Verwijderen</span>
+                                                    </button>
+                                                @endif
                                             </div>
                                         </div>
                                     </div>

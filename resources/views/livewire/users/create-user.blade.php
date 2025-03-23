@@ -43,6 +43,16 @@
                                 <label for="password_confirmation" class="block text-sm font-medium text-gray-700">Bevestig Wachtwoord</label>
                                 <input type="password" wire:model="password_confirmation" id="password_confirmation" class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
                             </div>
+
+                            <div class="col-span-6 sm:col-span-4">
+                                <label for="role" class="block text-sm font-medium text-gray-700">Rol</label>
+                                <select wire:model="role" id="role" class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
+                                    @foreach($roles as $role)
+                                        <option value="{{ $role->name }}">{{ ucfirst($role->name) }}</option>
+                                    @endforeach
+                                </select>
+                                <x-ui.forms.error error="role" />
+                            </div>
                         </div>
                     </div>
 

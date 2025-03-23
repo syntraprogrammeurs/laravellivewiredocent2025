@@ -6,6 +6,7 @@ use App\Models\User;
 use Livewire\Component;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use Spatie\Permission\Models\Role;
 
 class EditUser extends Component
 {
@@ -14,12 +15,14 @@ class EditUser extends Component
     public $email;
     public $password;
     public $password_confirmation;
+    public $role;
 
     public function mount(User $user)
     {
         $this->user = $user;
         $this->name = $user->name;
         $this->email = $user->email;
+        $this->role = $user->roles->first()?->name ?? 'viewer';
     }
 
     public function rules()
@@ -28,11 +31,17 @@ class EditUser extends Component
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($this->user->id)],
             'password' => ['nullable', 'string', 'min:8', 'confirmed'],
+            'role' => ['required', 'string', 'exists:roles,name'],
         ];
     }
 
     public function update()
     {
+        // Check of de gebruiker de juiste permissions heeft
+        if (!auth()->user()->can('edit users')) {
+            abort(403);
+        }
+
         $this->validate();
 
         $this->user->update([
@@ -46,6 +55,9 @@ class EditUser extends Component
             ]);
         }
 
+        // Update de rol
+        $this->user->syncRoles([$this->role]);
+
         session()->flash('message', 'Gebruiker succesvol bijgewerkt.');
         session()->flash('message_type', 'success');
 
@@ -54,6 +66,8 @@ class EditUser extends Component
 
     public function render()
     {
-        return view('livewire.users.edit-user');
+        return view('livewire.users.edit-user', [
+            'roles' => Role::all()
+        ]);
     }
 } 

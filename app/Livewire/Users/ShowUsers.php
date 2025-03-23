@@ -50,6 +50,9 @@ class ShowUsers extends Component
 
     public function delete(User $user)
     {
+        if (!auth()->user()->can('delete users')) {
+            abort(403);
+        }
         $user->delete();
         session()->flash('message', 'Gebruiker verwijderd.');
         session()->flash('message_type', 'error');
@@ -57,6 +60,9 @@ class ShowUsers extends Component
 
     public function forceDelete($userId)
     {
+        if (!auth()->user()->can('force delete users')) {
+            abort(403);
+        }
         User::withTrashed()->find($userId)->forceDelete();
         session()->flash('message', 'Gebruiker permanent verwijderd.');
         session()->flash('message_type', 'error');
@@ -64,6 +70,9 @@ class ShowUsers extends Component
 
     public function restore($userId)
     {
+        if (!auth()->user()->can('restore users')) {
+            abort(403);
+        }
         User::withTrashed()->find($userId)->restore();
         session()->flash('message', 'Gebruiker hersteld.');
         session()->flash('message_type', 'success');
@@ -83,6 +92,9 @@ class ShowUsers extends Component
 
     public function bulkDelete()
     {
+        if (!auth()->user()->can('delete users')) {
+            abort(403);
+        }
         $count = count($this->selectedUsers);
         User::whereIn('id', $this->selectedUsers)->delete();
         $this->selectedUsers = [];
@@ -93,6 +105,9 @@ class ShowUsers extends Component
 
     public function bulkRestore()
     {
+        if (!auth()->user()->can('restore users')) {
+            abort(403);
+        }
         $count = count($this->selectedUsers);
         User::whereIn('id', $this->selectedUsers)->restore();
         $this->selectedUsers = [];
@@ -103,6 +118,9 @@ class ShowUsers extends Component
 
     public function bulkForceDelete()
     {
+        if (!auth()->user()->can('force delete users')) {
+            abort(403);
+        }
         $count = count($this->selectedUsers);
         User::whereIn('id', $this->selectedUsers)->forceDelete();
         $this->selectedUsers = [];
@@ -115,6 +133,7 @@ class ShowUsers extends Component
     {
         if ($value) {
             $users = User::query()
+                ->with('roles')  // Eager load de roles
                 ->when($this->search, function ($query) {
                     $query->where(function ($query) {
                         $query->where('name', 'like', '%' . $this->search . '%')
@@ -143,6 +162,7 @@ class ShowUsers extends Component
         
         // Update selectAll status door de zichtbare gebruikers te tellen
         $visibleUsers = User::query()
+            ->with('roles')  // Eager load de roles
             ->when($this->search, function ($query) {
                 $query->where(function ($query) {
                     $query->where('name', 'like', '%' . $this->search . '%')
@@ -171,6 +191,7 @@ class ShowUsers extends Component
     private function getExportQuery()
     {
         return User::query()
+            ->with('roles')  // Eager load de roles
             ->when($this->search, function ($query) {
                 $query->where(function ($query) {
                     $query->where('name', 'like', '%' . $this->search . '%')
@@ -187,6 +208,7 @@ class ShowUsers extends Component
     {
         return view('livewire.users.show-users', [
             'users' => User::query()
+                ->with('roles')  // Eager load de roles
                 ->when($this->search, function ($query) {
                     $query->where(function ($query) {
                         $query->where('name', 'like', '%' . $this->search . '%')
@@ -198,6 +220,15 @@ class ShowUsers extends Component
                 })
                 ->orderBy($this->sortField, $this->sortDirection)
                 ->paginate($this->perPage),
+            'can' => [
+                'create' => auth()->user()->can('create users'),
+                'edit' => auth()->user()->can('edit users'),
+                'delete' => auth()->user()->can('delete users'),
+                'restore' => auth()->user()->can('restore users'),
+                'forceDelete' => auth()->user()->can('force delete users'),
+                'assignRoles' => auth()->user()->can('assign roles'),
+                'removeRoles' => auth()->user()->can('remove roles'),
+            ]
         ]);
     }
 
@@ -261,6 +292,30 @@ class ShowUsers extends Component
         session()->flash('message_type', 'success');
 
         $this->resetEditing();
+    }
+
+    public function mount()
+    {
+        $this->loadUsers();
+    }
+
+    public function loadUsers()
+    {
+        $query = User::query()
+            ->with('roles') // Laad de rollen mee
+            ->when($this->search, function ($query) {
+                $query->where(function ($query) {
+                    $query->where('name', 'like', '%' . $this->search . '%')
+                        ->orWhere('email', 'like', '%' . $this->search . '%');
+                });
+            })
+            ->when($this->sortField, function ($query) {
+                $query->orderBy($this->sortField, $this->sortDirection);
+            }, function ($query) {
+                $query->latest();
+            });
+
+        $this->users = $query->get();
     }
 }
 
