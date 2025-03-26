@@ -1,0 +1,11 @@
+{
+  "servers": [
+    {
+      "name": "Cursor MCP",
+      "command": "node",
+      "transport": {
+        "kind": "stdio"
+      }
+    }
+  ]
+} 

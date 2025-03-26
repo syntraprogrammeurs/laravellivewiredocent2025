@@ -145,7 +145,7 @@ class ShowUsers extends Component
                 })
                 ->orderBy($this->sortField, $this->sortDirection)
                 ->get();
-
+                
             $this->selectedUsers = $users->pluck('id')->toArray();
         } else {
             $this->selectedUsers = [];
@@ -159,7 +159,7 @@ class ShowUsers extends Component
         } else {
             $this->selectedUsers[] = $userId;
         }
-
+        
         // Update selectAll status door de zichtbare gebruikers te tellen
         $visibleUsers = User::query()
             ->with('roles')  // Eager load de roles
@@ -174,7 +174,7 @@ class ShowUsers extends Component
             })
             ->orderBy($this->sortField, $this->sortDirection)
             ->get();
-
+            
         $this->selectAll = count($this->selectedUsers) === $visibleUsers->count();
     }
 
@@ -190,15 +190,18 @@ class ShowUsers extends Component
 
     private function getExportQuery()
     {
-        return User::query()->when($this->search, function ($query) {
-            $query->where(function ($query) {
-                $query->where('name', 'like', '%' . $this->search . '%')->orWhere('email', 'like', '%' . $this->search . '%');
-            });
-        })->when($this->showDeleted, function ($query) {
-            $query->withTrashed();
-        })->when(!empty($this->selectedUsers), function ($query) {
-            $query->whereIn('id', $this->selectedUsers);
-        })->orderBy($this->sortField, $this->sortDirection);
+        return User::query()
+            ->with('roles')  // Eager load de roles
+            ->when($this->search, function ($query) {
+                $query->where(function ($query) {
+                    $query->where('name', 'like', '%' . $this->search . '%')
+                        ->orWhere('email', 'like', '%' . $this->search . '%');
+                });
+            })
+            ->when($this->showDeleted, function ($query) {
+                $query->withTrashed();
+            })
+            ->orderBy($this->sortField, $this->sortDirection);
     }
 
     public function render()
